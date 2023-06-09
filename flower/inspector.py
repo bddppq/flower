@@ -1,6 +1,7 @@
 import time
 import logging
 import collections
+from concurrent.futures import ThreadPoolExecutor
 
 from functools import partial
 
@@ -17,11 +18,12 @@ class Inspector(object):
         self.capp = capp
         self.timeout = timeout
         self.workers = collections.defaultdict(dict)
+        self.executor = ThreadPoolExecutor(max_workers=1)
 
     def inspect(self, workername=None):
         feutures = []
         for method in self.methods:
-            feutures.append(self.io_loop.run_in_executor(None, partial(self._inspect, method, workername)))
+            feutures.append(self.io_loop.run_in_executor(self.executor, partial(self._inspect, method, workername)))
         return feutures
 
     def _on_update(self, workername, method, response):
